@@ -1,0 +1,21 @@
+{
+  "manifest_version": 2,
+  "name": "Better Github Forks",
+  "version": "0.1",
+  "version_name": "0.1 alpha",
+  "description": "Helps to find good forks of any project on Github.",
+
+  "author": "Alexander Slesarenko",
+  "developer": {
+    "name": "Alexander Slesarenko",
+    "url": "https://github.com/dragongling"
+  },
+  "homepage_url": "https://github.com/dragongling/Better-Github-Forks",
+
+  "content_scripts": [
+    {
+      "matches": ["*://github.com/*/network/members"],
+      "js": ["js/jquery-3.5.1.min.js", "js/forks.js"]
+    }
+  ]
+}
