@@ -15,26 +15,6 @@ $(document).ready(function(){
 			let watches = 0;
 			let stars = 0;
 
-			let commits_string = '';
-			if(commits_ahead > 0){
-				commits_string += `<strong>${commits_ahead}</strong> commit ahead`;
-			}
-			if(commits_behind > 0){
-				if(commits_string != ''){
-					commits_string += ` / <strong>${commits_behind}</strong> behind`;
-				} else {
-					commits_string += `<strong>${commits_behind}</strong> commit behind`;
-				}
-			}
-			if(commits_string != ''){
-				$(this).append(`
-				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-				<a class="link-gray-dark no-underline" href="${repo_link}/commits/master">
-					${commits_string}
-				</a>
-				`);
-			}
-
 			// Through Github REST API:
 			/*$.ajax({
 				url: `https://api.github.com/repos${repo_link}`,
@@ -54,6 +34,14 @@ $(document).ready(function(){
 
 			// Through parsing DOM of repo HTML pages:
 			console.log(repo_link);
+
+			$(this).append(`
+				<div class="loading_indicator">
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+					<div class="loader"></div>&nbsp;getting data...
+				</div>
+				`);
+
 			$.ajax({
 				url: `https://github.com${repo_link}`,
 				async: false,
@@ -68,6 +56,28 @@ $(document).ready(function(){
 					console.log(errorThrown);
 				}
 			});
+
+			$(this).find('.loading_indicator').remove();
+
+			let commits_string = '';
+			if(commits_ahead > 0){
+				commits_string += `<strong>${commits_ahead}</strong> commit ahead`;
+			}
+			if(commits_behind > 0){
+				if(commits_string != ''){
+					commits_string += ` / <strong>${commits_behind}</strong> behind`;
+				} else {
+					commits_string += `<strong>${commits_behind}</strong> commit behind`;
+				}
+			}
+			if(commits_string != ''){
+				$(this).append(`
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				<a class="link-gray-dark no-underline" href="${repo_link}/commits/master">
+					${commits_string}
+				</a>
+				`);
+			}			
 
 			if(stars > 0){
 				$(this).append(`
