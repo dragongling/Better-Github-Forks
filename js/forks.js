@@ -49,7 +49,7 @@ $(document).ready(function(){
 					const regex = /This branch is (.*) \w+:\w+\./gm;
 					const match = regex.exec(commit_data);
 					commit_data = match[1];
-					commit_data = commit_data.replaceAll(/ of| with| commits/g, '');
+					commit_data = commit_data.replaceAll(/ of| with| commits?/g, '');
 					commits_string = commit_data;
 					watches = parseInt(counters[0].text);
 					stars = parseInt(counters[1].text);
