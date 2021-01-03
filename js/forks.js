@@ -10,10 +10,10 @@ $(document).ready(function(){
 		const is_selected_repo = $(this).find('a').last().attr('class') == 'Link--secondary';
 
 		if(!is_selected_repo){
-			const commits_ahead = getRandomInt(4);
-			const commits_behind = getRandomInt(2);
-			const watches = getRandomInt(4);
-			const stars = getRandomInt(4);
+			const commits_ahead = 0;
+			const commits_behind = 0;
+			let watches = 0;
+			let stars = 0;
 
 			let commits_string = '';
 			if(commits_ahead > 0){
@@ -34,6 +34,41 @@ $(document).ready(function(){
 				</a>
 				`);
 			}
+
+			// Through Github REST API:
+			/*$.ajax({
+				url: `https://api.github.com/repos${repo_link}`,
+				headers: {
+					Accept: "application/vnd.github.v3+json"
+				},
+				success : function(response) {
+					console.log("success");
+					console.log(response);
+				},
+				error : function(jqXHR, textStatus, errorThrown){
+					console.log(jqXHR);
+					console.log(textStatus);
+					console.log(errorThrown);
+				}
+			});*/
+
+			// Through parsing DOM of repo HTML pages:
+			console.log(repo_link);
+			$.ajax({
+				url: `https://github.com${repo_link}`,
+				async: false,
+				success : function(response) {
+					const counters = $(response).find('.social-count');
+					watches = parseInt(counters[0].text);
+					stars = parseInt(counters[1].text);					
+					console.log(`watchers: ${watches}`);
+					console.log(`stars: ${stars}`);
+				},
+				error : function(jqXHR, textStatus, errorThrown){
+					console.log(errorThrown);
+				}
+			});
+
 			if(stars > 0){
 				$(this).append(`
 				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
