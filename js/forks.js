@@ -5,6 +5,8 @@ function getRandomInt(max) {
 $(document).ready(function(){
 	const show_watches = true;
 	const show_even = true;
+	const token = 'YOUR GITHUB TOKEN HERE';
+	let use_api = true;
 
 	$( ".repo" ).each(function(i){
 		const repo_link = $(this).find('a').last().attr('href');
@@ -15,24 +17,6 @@ $(document).ready(function(){
 			let stars = 0;
 			let commits_string = '';
 
-			// Through Github REST API:
-			/*$.ajax({
-				url: `https://api.github.com/repos${repo_link}`,
-				headers: {
-					Accept: "application/vnd.github.v3+json"
-				},
-				success : function(response) {
-					console.log("success");
-					console.log(response);
-				},
-				error : function(jqXHR, textStatus, errorThrown){
-					console.log(jqXHR);
-					console.log(textStatus);
-					console.log(errorThrown);
-				}
-			});*/
-
-			// Through parsing DOM of repo HTML pages:
 			$(this).append(`
 				<div class="loading_indicator">
 					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
@@ -40,24 +24,91 @@ $(document).ready(function(){
 				</div>
 				`);
 
-			$.ajax({
-				url: `https://github.com${repo_link}`,
-				async: false,
-				success : function(response) {
-					const counters = $(response).find('.social-count');
-					let commit_data = $(response).find('.file-navigation').next().find('.flex-auto').html().trim();
-					const regex = /This branch is (.*) \w+:\w+\./gm;
-					const match = regex.exec(commit_data);
-					commit_data = match[1];
-					commit_data = commit_data.replaceAll(/ of| with| commits?/g, '');
-					commits_string = commit_data;
-					watches = parseInt(counters[0].text);
-					stars = parseInt(counters[1].text);
-				},
-				error : function(jqXHR, textStatus, errorThrown){
-					console.log(errorThrown);
-				}
-			});
+			if(use_api){
+				// Through Github REST API:
+				// Get repo data:
+				let child_owner, child_branch, parent_owner, parent_branch, repo_name;
+				$.ajax({
+					url: `https://api.github.com/repos${repo_link}`,
+					async: false,
+					headers: {
+						Accept: "application/vnd.github.v3+json",
+						Authorization: `token ${token}`
+					},
+					success : function(response) {
+						console.log(response);
+						//commits_string = commit_data;
+						watches = response.watchers;
+						stars = response.stargazers_count;
+						child_owner = response.owner.login;
+						child_branch = response.default_branch;
+						parent_owner = response.parent.owner.login;
+						parent_branch = response.parent.default_branch;
+						repo_name = response.name;
+					},
+					error : function(jqXHR, textStatus, errorThrown){
+						console.log(errorThrown);
+					}
+				});
+				// Get commits ahead / behind data:
+				let url = `https://api.github.com/repos/${parent_owner}/${repo_name}/compare/${parent_branch}...${child_owner}:${child_branch}`;
+				console.log(url);
+				$.ajax({
+					url: url,
+					async: false,
+					headers: {
+						Accept: "application/vnd.github.v3+json",
+						Authorization: `token ${token}`
+					},
+					success : function(response) {
+						//console.log(response);
+						const commits_ahead = response.ahead_by;
+						const commits_behind = response.behind_by;
+						const status = response.status;
+						console.log(`ahead: ${commits_ahead}, behind: ${commits_behind}, status: ${status}`);
+						commits_string = '';
+						if(commits_ahead == 0 && commits_behind == 0){
+							commits_string = 'even';
+						} else {
+							if(commits_ahead > 0){
+								commits_string += `<strong>${commits_ahead}</strong> ahead`;
+							}
+							if(commits_behind > 0){
+								if(commits_string != ''){
+									commits_string += `, <strong>${commits_behind}</strong> behind`;
+								} else {
+									commits_string += `<strong>${commits_behind}</strong> behind`;
+								}
+							}
+						}
+					},
+					error : function(jqXHR, textStatus, errorThrown){
+						console.log(errorThrown);
+					}
+				});
+			}
+			// Not 'else' because use_api can disable automatically if API request limit reached
+			if(!use_api){
+				// Through parsing DOM of repo HTML pages:
+				$.ajax({
+					url: `https://github.com${repo_link}`,
+					async: false,
+					success : function(response) {
+						const counters = $(response).find('.social-count');
+						let commit_data = $(response).find('.file-navigation').next().find('.flex-auto').html().trim();
+						const regex = /This branch is (.*) \w+:\w+\./gm;
+						const match = regex.exec(commit_data);
+						commit_data = match[1];
+						commit_data = commit_data.replaceAll(/ of| with| commits?/g, '');
+						commits_string = commit_data;
+						watches = parseInt(counters[0].text);
+						stars = parseInt(counters[1].text);
+					},
+					error : function(jqXHR, textStatus, errorThrown){
+						console.log(errorThrown);
+					}
+				});
+			}			
 
 			$(this).find('.loading_indicator').remove();
 			
